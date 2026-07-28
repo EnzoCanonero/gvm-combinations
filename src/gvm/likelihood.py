@@ -1,21 +1,11 @@
-# Likelihood utilities: NLL, Fisher information, Bartlett corrections.
+"""Likelihood calculations and Bartlett corrections."""
+
 import numpy as np
 from .fit_results import FitResult
 
 
 def nll(comb, mu, *thetas):
-    """Negative log-likelihood for a combination instance.
-
-    Parameters
-    ----------
-    comb : GVMCombination-like
-        Object exposing attributes: measurements, V_inv, Gamma, C_inv,
-        uncertain_systematics, eoe_type.
-    mu : float
-        Parameter of interest.
-    thetas : sequence of arrays
-        Nuisance parameters grouped per systematic.
-    """
+    """Return the negative log-likelihood for a combination."""
     thetas = list(thetas)
 
     adj = np.sum([comb.Gamma[k] @ thetas[i]
@@ -47,15 +37,7 @@ def nll(comb, mu, *thetas):
 
 
 def compute_FIM(comb, S):
-    """Compute the Fisher Information Matrix for the combination.
-
-    Parameters
-    ----------
-    comb : GVMCombination-like
-        Object exposing attributes: V_inv, Gamma, C_inv, eoe_type.
-    S : list of floats or arrays
-        Scale factors per systematic used in Bartlett correction.
-    """
+    """Return the Fisher information matrix."""
     keys = list(comb.C_inv.keys())
     sizes = [comb.C_inv[k].shape[0] for k in keys]
 
@@ -91,13 +73,7 @@ def compute_FIM(comb, S):
 
 
 def bartlett_correction(comb):
-    """Return Bartlett corrections for profile LR and GOF.
-
-    Returns
-    -------
-    tuple of float
-        (b_profile, b_chi2)
-    """
+    """Return profile-likelihood and goodness-of-fit Bartlett corrections."""
     if len(comb.C_inv) == 0:
         return 1.0, float(len(comb.measurements) - 1)
 

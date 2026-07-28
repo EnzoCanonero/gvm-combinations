@@ -1,4 +1,4 @@
-# Main GVM combination API (fitting, intervals, goodness-of-fit).
+"""GVM fitting, intervals and goodness-of-fit."""
 import os
 from scipy.stats import norm
 import numpy as np
@@ -14,29 +14,23 @@ from .config import (
 )
 
 class GVMCombination:
-    """General combination tool using the Gamma Variance model."""
+    """Combine correlated measurements with the Gamma Variance Model."""
 
     def __init__(self, data):
-        # Accept pre-built input_data (from gvm.config)
         input_data = data
         
-        # Validate that the input data has the required structure and fields
         validate_input_data(input_data)
 
         self._input_data = input_data
 
-        # Pre-compute matrices needed for fitting
         self.V_inv = None
         self.C_inv = {}
         self.Gamma = {}
         self.prepare()
         
-        # Placeholder for fit results (to be populated after fitting)
         self.fit_results = None
     
-    # ------------------------------------------------------------------
-    # Input-data accessors
-    # ------------------------------------------------------------------
+    # Input data
     
     @property
     def name(self):
@@ -75,11 +69,7 @@ class GVMCombination:
         return self._input_data.uncertain_systematics
 
     def get_input_data(self, copy: bool = False):
-        """Return the current input_data object.
-
-        If ``copy`` is True, return a shallow copy with arrays copied to
-        avoid in-place external mutations affecting the combination.
-        """
+        """Return the input data, optionally as a shallow copy with copied arrays."""
         if not copy:
             return self._input_data
         s = self._input_data
@@ -95,10 +85,7 @@ class GVMCombination:
         )
 
     def set_input_data(self, data, refit: bool = True):
-        """Replace the combination input with a new input_data object.
-
-        Validates, rebuilds internal matrices, and optionally refits.
-        """
+        """Replace the input data, rebuild the matrices and optionally refit."""
         validate_input_data(data)
         self._input_data = data
         self.V_inv, self.C_inv, self.Gamma = self._compute_likelihood_matrices()
@@ -106,22 +93,16 @@ class GVMCombination:
             self.fit_results = self.minimize()
         return self
         
-    # ------------------------------------------------------------------
-    # Prepare Likelihood Matrices
-    # ------------------------------------------------------------------
+    # Likelihood matrices
     
     def prepare(self):
-        """Validate inputs and compute internal matrices for likelihood.
-        """
+        """Validate the input data and rebuild the likelihood matrices."""
         validate_input_data(self._input_data)
         self.V_inv, self.C_inv, self.Gamma = self._compute_likelihood_matrices()
         return self
     
     def _compute_likelihood_matrices(self):
-        """Build likelihood matrices and discard NP columns associated with null shifts.
-        After scaling by shifts, all-zero Gamma columns are removed, keeping only
-        active nuisance parameters.
-        """
+        """Build likelihood matrices, dropping nuisance parameters with zero shifts."""
         n = len(self.measurements)
         V_stat = self.V_stat
         V_syst = np.zeros((n, n))
@@ -151,10 +132,7 @@ class GVMCombination:
         return V_inv, C_inv, Gamma_factors
     
     def _reduce_corr(self, rho, src_name=None):
-        """Reduce correlation by grouping fully correlated/anticorrelated entries (±1)
-        redundant entries are effectively discarded as they can be represented by 
-        one NP. 
-        """
+        """Collapse fully correlated or anticorrelated entries into one nuisance parameter."""
         n = rho.shape[0]
         groups = []
         visited = set()
@@ -196,23 +174,12 @@ class GVMCombination:
                     f'adding {offset:.4e} to diagonal for regularisation.')
         return reduced, Gamma
     
-    # ------------------------------------------------------------------
-    # Minimize and Fit
-    # ------------------------------------------------------------------
-    def minimize(self, fixed=None, update=True):
-        """Minimise the negative log-likelihood.
+    # Fitting
 
-        Parameters
-        ----------
-        fixed : dict, optional
-            Dictionary mapping parameter names to fixed values.  Any parameter
-            not listed here is treated as free.
-        update : bool, optional
-            If True, store the fit result in ``self.fit_results``.
-        """
+    def minimize(self, fixed=None, update=True):
+        """Minimise the likelihood, optionally fixing parameters and storing the result."""
         fixed = fixed or {}
 
-        # Build full parameter list
         names = ['mu']
         for key in self.Gamma:
             for j in range(self.Gamma[key].shape[1]):
@@ -221,7 +188,6 @@ class GVMCombination:
         y_vals = np.fromiter(self.measurements.values(), dtype=float)
         initial = [np.mean(y_vals)] + [0.] * (len(names) - 1)
 
-        # Determine which parameters are free
         free_idx = []
         free_names = []
         x0 = []
@@ -231,9 +197,7 @@ class GVMCombination:
                 free_names.append(n)
                 x0.append(initial[i])
 
-        # If no parameters remain free after applying the fixed values,
-        # directly evaluate the negative log-likelihood without calling a
-        # minimiser.
+        # Evaluate directly when every parameter is fixed.
         if len(x0) == 0:
             params = list(initial)
             for n, val in fixed.items():
@@ -274,7 +238,6 @@ class GVMCombination:
 
         m = _minimize(f, x0, free_names, errordef=0.5)
 
-        # Collect fitted values
         values = dict(zip(names, initial))
         for val, idx in zip(m.values, free_idx):
             values[names[idx]] = val
@@ -291,19 +254,15 @@ class GVMCombination:
         return result
     
     def fit(self, fixed=None, update=True):
-        """Run the minimisation and store the result in ``self.fit_results``.
-        This is a convenience wrapper around ``minimize`` that ensures the
-        instance is prepared before fitting.
-        """
+        """Prepare the model if needed, then minimise the likelihood."""
         if self.V_inv is None or not self.Gamma:
             self.prepare()
         return self.minimize(fixed=fixed, update=update)
     
-    # ------------------------------------------------------------------
-    # Confidence interval
-    # ------------------------------------------------------------------
+    # Confidence intervals
+
     def likelihood_ratio(self, mu):
-        #Profile likelihood-ratio test statistic
+        """Return the profile likelihood-ratio statistic at mu."""
         best = self.fit_results or self.minimize()
         nll_best = best.nll if isinstance(best, FitResult) else _nll_fn(self, best['mu'], *best['thetas'])
         res_mu = self.minimize(fixed={'mu': mu}, update=False)
@@ -311,26 +270,7 @@ class GVMCombination:
         return 2 * (nll_mu - nll_best)
 
     def confidence_interval(self, step=0.01, tol=0.001, max_iter=1000, cl_val=0.683):
-        """Compute a Bartlett-corrected profile-likelihood CI for mu.
-
-        Parameters
-        ----------
-        step : float, optional
-            Initial scan step size used to move up/down from the MLE (mu_hat)
-            when bracketing the interval; halved during the bisection phase.
-        tol : float, optional
-            Convergence tolerance for the refinement step on |q(mu) - b_profile|.
-        max_iter : int, optional
-            Maximum number of scan/refinement iterations in each direction to
-            guard against non-convergence.
-        cl_val : float, optional
-            Confidence level
-
-        Returns
-        -------
-        tuple of float
-            (lower, upper, half_width)
-        """
+        """Return the Bartlett-corrected interval as (lower, upper, half_width)."""
         b_profile, _ = _bartlett_correction_fn(self)
         thr = b_profile * (norm.ppf(0.5 * (1.0 + cl_val)) ** 2)
         fit = self.fit_results or self.minimize()
@@ -372,16 +312,15 @@ class GVMCombination:
             it += 1
         return down, up, 0.5*(up - down)
     
-    # ------------------------------------------------------------------
     # Goodness of fit
-    # ------------------------------------------------------------------
+
     def goodness_of_fit(self):
-        #Return GOF at the fitted parameters (-2 * NLL with Bartlett correction).
+        """Return the Bartlett-corrected goodness-of-fit statistic."""
         fit = self.fit_results if self.fit_results else self.minimize()
         mu = fit.mu if isinstance(fit, FitResult) else fit['mu']
         thetas = fit.thetas if isinstance(fit, FitResult) else fit['thetas']
 
-        # ``fit['thetas']`` is stored as a flat array. Split into per-syst arrays.
+        # Split the flat nuisance-parameter array by systematic source.
         thetas = np.asarray(thetas)
         if thetas.size == 0:
             q = 2 * _nll_fn(self, mu)

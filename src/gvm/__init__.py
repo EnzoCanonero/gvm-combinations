@@ -1,4 +1,4 @@
-"""GVM Combination Toolkit -- Gamma Variance Model for combining correlated measurements."""
+"""Tools for combining correlated measurements with the Gamma Variance Model."""
 
 from .combination import GVMCombination
 from .config import build_input_data, input_data, validate_input_data

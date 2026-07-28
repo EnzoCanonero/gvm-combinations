@@ -1,9 +1,4 @@
-"""Run a GVM combination and produce summary results.
-
-Usage:
-    cd runs/toy_2meas && python ../../scripts/run_combination.py
-    python scripts/run_combination.py --config runs/toy_2meas/input/toy2.yaml
-"""
+"""Run a GVM combination and write summary results."""
 import argparse
 import glob as globmod
 import sys
@@ -19,7 +14,7 @@ from gvm import GVMCombination, build_input_data
 
 
 def find_default_config():
-    """Auto-discover the YAML config in input/. Error if not exactly one."""
+    """Return the only YAML configuration in input/."""
     yamls = sorted(globmod.glob("input/*.yaml")) + sorted(globmod.glob("input/*.yml"))
     if len(yamls) == 0:
         raise FileNotFoundError("No .yaml files found in input/.")
@@ -57,7 +52,7 @@ def main():
     p_val = 1 - chi2.cdf(gof, df=data.n_meas - 1)
     sig = norm.ppf(1 - p_val / 2)
 
-    # ── terminal output ──────────────────────────────────────────────
+    # Terminal output
     print(f"\n=== GVM Combination: {data.name} ===")
     print(f"mu_hat      = {mu:.4f}")
     print(f"68.3% CI    = ({lo_1:.4f}, {hi_1:.4f}),  half-width = {hw_1:.4f}")
@@ -66,7 +61,7 @@ def main():
     print(f"p-value     = {p_val:.4f}")
     print(f"significance = {sig:.2f} sigma")
 
-    # ── results file ─────────────────────────────────────────────────
+    # Results file
     results = {
         "name": data.name,
         "mu_hat": float(mu),
@@ -87,7 +82,7 @@ def main():
     with open(output / "results.yaml", "w") as f:
         yaml.dump(results, f, default_flow_style=False, sort_keys=False)
 
-    # ── summary plot ─────────────────────────────────────────────────
+    # Summary plot
     labels = data.labels
     centrals = np.array([data.measurements[l] for l in labels])
     stat_diag = np.sqrt(np.diag(data.V_stat))

@@ -1,4 +1,5 @@
-# Configuration parsing and input validation utilities.
+"""Parse and validate combination configuration."""
+
 import os
 import warnings
 from dataclasses import dataclass
@@ -7,6 +8,8 @@ import yaml
 
 @dataclass
 class input_data:
+    """Input data for a measurement combination."""
+
     name: str
     n_meas: int
     n_syst: int
@@ -20,7 +23,7 @@ class input_data:
 
 
 def build_input_data(path: str) -> input_data:
-    #Parse YAML at ``path`` and return populated input_data.
+    """Build combination input data from a YAML file."""
     with open(path, 'r') as f:
         data = yaml.safe_load(f)
 
@@ -151,26 +154,17 @@ def build_input_data(path: str) -> input_data:
 
 
 def validate_input_data(input_data: input_data) -> None:
-    """Validate internal consistency of a parsed ``input_data``.
-
-    Checks that measurement/systematic counts match expectations, matrices have
-    correct shapes and are symmetric (emitting warnings for asymmetries), and
-    that error-on-error settings are consistent with their types.
-    """
+    """Validate the consistency of parsed input data."""
     meas_names = list(input_data.measurements)
-    # Check declared n_meas matches number of provided measurements
     if len(meas_names) != input_data.n_meas:
         raise ValueError(f'Expected {input_data.n_meas} measurements, got {len(meas_names)}')
 
-    # Check declared n_syst matches number of provided systematics
     if len(input_data.syst) != input_data.n_syst:
         raise ValueError(f'Expected {input_data.n_syst} systematics, got {len(input_data.syst)}')
 
-    # Check statistical covariance matrix has the correct shape
     if input_data.V_stat.shape != (input_data.n_meas, input_data.n_meas):
         raise ValueError(f'Stat covariance must be {input_data.n_meas}x{input_data.n_meas}')
         
-    # Warn if statistical covariance matrix is asymmetric
     diff = np.argwhere(~np.isclose(input_data.V_stat, input_data.V_stat.T, rtol=1e-7, atol=1e-8))
     for i, j in diff:
         if i < j:
@@ -179,20 +173,16 @@ def validate_input_data(input_data: input_data) -> None:
                 f'{meas_names[i]} and {meas_names[j]}: '
                 f'{input_data.V_stat[i, j]} vs {input_data.V_stat[j, i]}')
     
-    # Check each systematic shift vector has one value per measurement
     for name, arr in input_data.syst.items():
         if arr.shape[0] != input_data.n_meas:
             raise ValueError(f'Systematic {name} must have {input_data.n_meas} values')
 
-    # Check a correlation matrix is provided for each systematic
     if len(input_data.corr) != input_data.n_syst:
         raise ValueError(f'Expected {input_data.n_syst} correlation matrices, got {len(input_data.corr)}')
 
     for name, mat in input_data.corr.items():
-        # Check each correlation matrix has the correct shape
         if mat.shape != (input_data.n_meas, input_data.n_meas):
             raise ValueError(f'Correlation matrix {name} must be {input_data.n_meas}x{input_data.n_meas}')
-        # Warn if any correlation matrix is asymmetric
         diff = np.argwhere(~np.isclose(mat, mat.T, rtol=1e-7, atol=1e-8))
         for i, j in diff:
             if i < j:
@@ -200,19 +190,18 @@ def validate_input_data(input_data: input_data) -> None:
                     f'Correlation matrix "{name}" asymmetric for measurements '
                     f'{meas_names[i]} and {meas_names[j]}: '
                     f'{mat[i, j]} vs {mat[j, i]}')
-        # For independent EoE, require a diagonal correlation matrix
+        # Independent error-on-error terms require a diagonal correlation matrix.
         if input_data.eoe_type.get(name, 'dependent') == 'independent':
             if not np.allclose(mat, np.eye(input_data.n_meas)):
                 raise ValueError(
                     f'Systematic {name} has independent error-on-error but correlation is not diagonal')
 
-    # First pass: handle dependent systematics
+    # Dependent systematics use a single epsilon.
     for name, typ in input_data.eoe_type.items():
         if typ != 'dependent':
             continue
         if name in input_data.uncertain_systematics:
             eps_val = input_data.uncertain_systematics[name]
-            # Must be a scalar number for dependent type
             if isinstance(eps_val, (list, tuple, np.ndarray)):
                 raise ValueError(
                     f"Systematic {name} has dependent error-on-error but epsilon is not a single number")
@@ -225,17 +214,15 @@ def validate_input_data(input_data: input_data) -> None:
                 warnings.warn(
                     f"Systematic '{name}' has epsilon 0.0; removing from uncertain_systematics.")
 
-    # Second pass: handle independent systematics
+    # Independent systematics use one epsilon per active shift.
     for name, typ in input_data.eoe_type.items():
         if typ != 'independent':
             continue
         expected = np.count_nonzero(input_data.syst[name])
-        # Expand scalar epsilon to vector over active (nonzero-shift) components
         if name in input_data.uncertain_systematics:
             val = input_data.uncertain_systematics[name]
             if not isinstance(val, (list, tuple, np.ndarray)):
                 input_data.uncertain_systematics[name] = np.repeat(float(val), expected)
-        # Fetch and normalise epsilon vector
         eps_raw = input_data.uncertain_systematics.get(name, np.zeros(expected))
         eps = np.asarray(eps_raw, dtype=float)
         if eps.shape[0] != expected:
@@ -248,7 +235,6 @@ def validate_input_data(input_data: input_data) -> None:
             else:
                 raise ValueError(
                     f"Systematic {name} has independent error-on-error but epsilon has {eps.shape[0]} values (expected {expected} or {input_data.n_meas})")
-        # Drop all-zero (or no active) entries for independent type
         if expected == 0 or (eps.size == expected and not np.any(eps != 0.0)):
             input_data.uncertain_systematics.pop(name, None)
             warnings.warn(

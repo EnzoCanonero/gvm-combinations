@@ -1,13 +1,4 @@
-"""Lambda scan over error-on-error scaling.
-
-Scans a global scaling factor lambda that multiplies all error-on-error
-values uniformly, tracking how mu_hat, CI, and GOF evolve.
-
-Usage:
-    cd runs/toy_2meas && python ../../scripts/scan_error_on_error.py
-    python scripts/scan_error_on_error.py --config runs/toy_2meas/input/toy2.yaml
-    python scripts/scan_error_on_error.py --config runs/toy_4meas/input/toy4.yaml --lambda-range 0 2.0
-"""
+"""Scan a global scaling factor for all error-on-error values."""
 import argparse
 import glob as globmod
 import sys
@@ -23,7 +14,7 @@ from gvm import GVMCombination, build_input_data
 
 
 def find_default_config():
-    """Auto-discover the YAML config in input/. Error if not exactly one."""
+    """Return the only YAML configuration in input/."""
     yamls = sorted(globmod.glob("input/*.yaml")) + sorted(globmod.glob("input/*.yml"))
     if len(yamls) == 0:
         raise FileNotFoundError("No .yaml files found in input/.")
@@ -62,7 +53,7 @@ def main():
     comb = GVMCombination(data)
     base_info = comb.get_input_data(copy=True)
 
-    # Read base epsilons from the YAML config (values at lambda=1)
+    # Keep the original error-on-error values for lambda = 1.
     base_eps = {}
     for sname in base_info.syst:
         if sname in base_info.uncertain_systematics:
@@ -88,7 +79,7 @@ def main():
         p = 1 - chi2.cdf(chi2_val, df=data.n_meas - 1)
         significances.append(norm.ppf(1 - p / 2))
 
-    # ── scan plot ────────────────────────────────────────────────────
+    # Scan plot
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.plot(lambda_grid, cv, "k--o", label="Central Value")
     ax.fill_between(lambda_grid, lo_2, hi_2, color="yellow", alpha=0.25, label="95.5% CI")
@@ -107,7 +98,7 @@ def main():
     plt.close(fig)
     print(f"Scan plot saved to {output / 'scan.png'}")
 
-    # ── GOF plot ─────────────────────────────────────────────────────
+    # Goodness-of-fit plot
     fig, ax = plt.subplots(figsize=(11, 7))
     ax.plot(lambda_grid, significances, "--o")
     ax.set_xlabel(r"$\lambda$", fontsize=24)
