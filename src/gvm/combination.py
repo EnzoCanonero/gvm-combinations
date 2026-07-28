@@ -1,74 +1,80 @@
 """GVM fitting, intervals and goodness-of-fit."""
-import os
-from scipy.stats import norm
-import numpy as np
-import yaml
+
+from __future__ import annotations
+
 import warnings
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
+from typing import Optional
+
+import numpy as np
+from scipy.stats import norm
+
+from .config import (
+    ErrorOnError,
+    ErrorOnErrorType,
+    input_data as InputData,
+    validate_input_data,
+)
 from .fit_results import FitResult
 from .likelihood import nll as _nll_fn, bartlett_correction as _bartlett_correction_fn
 from .minuit_wrapper import minimize as _minimize
-from .config import (
-    validate_input_data,
-    input_data as InputData,
-)
+
 
 class GVMCombination:
     """Combine correlated measurements with the Gamma Variance Model."""
 
-    def __init__(self, data):
-        input_data = data
-        
-        validate_input_data(input_data)
+    def __init__(self, data: InputData) -> None:
+        validate_input_data(data)
 
-        self._input_data = input_data
+        self._input_data: InputData = data
 
-        self.V_inv = None
-        self.C_inv = {}
-        self.Gamma = {}
+        self.V_inv: np.ndarray
+        self.C_inv: dict[str, np.ndarray] = {}
+        self.Gamma: dict[str, np.ndarray] = {}
         self.prepare()
-        
-        self.fit_results = None
+
+        self.fit_results: Optional[FitResult] = None
     
     # Input data
     
     @property
-    def name(self):
+    def name(self) -> str:
         return self._input_data.name
 
     @property
-    def n_meas(self):
+    def n_meas(self) -> int:
         return self._input_data.n_meas
 
     @property
-    def n_syst(self):
+    def n_syst(self) -> int:
         return self._input_data.n_syst
 
     @property
-    def measurements(self):
+    def measurements(self) -> dict[str, float]:
         return self._input_data.measurements
 
     @property
-    def V_stat(self):
+    def V_stat(self) -> np.ndarray:
         return self._input_data.V_stat
 
     @property
-    def syst(self):
+    def syst(self) -> dict[str, np.ndarray]:
         return self._input_data.syst
 
     @property
-    def corr(self):
+    def corr(self) -> dict[str, np.ndarray]:
         return self._input_data.corr
 
     @property
-    def eoe_type(self):
+    def eoe_type(self) -> dict[str, ErrorOnErrorType]:
         return self._input_data.eoe_type
 
     @property
-    def uncertain_systematics(self):
+    def uncertain_systematics(self) -> dict[str, ErrorOnError]:
         return self._input_data.uncertain_systematics
 
-    def get_input_data(self, copy: bool = False):
+    def get_input_data(self, copy: bool = False) -> InputData:
         """Return the input data, optionally as a shallow copy with copied arrays."""
         if not copy:
             return self._input_data
@@ -84,24 +90,27 @@ class GVMCombination:
                                    for k, v in s.uncertain_systematics.items()},
         )
 
-    def set_input_data(self, data, refit: bool = True):
+    def set_input_data(self, data: InputData, refit: bool = True) -> GVMCombination:
         """Replace the input data, rebuild the matrices and optionally refit."""
         validate_input_data(data)
         self._input_data = data
         self.V_inv, self.C_inv, self.Gamma = self._compute_likelihood_matrices()
+        self.fit_results = None
         if refit:
             self.fit_results = self.minimize()
         return self
-        
+
     # Likelihood matrices
     
-    def prepare(self):
+    def prepare(self) -> GVMCombination:
         """Validate the input data and rebuild the likelihood matrices."""
         validate_input_data(self._input_data)
         self.V_inv, self.C_inv, self.Gamma = self._compute_likelihood_matrices()
         return self
     
-    def _compute_likelihood_matrices(self):
+    def _compute_likelihood_matrices(
+        self,
+    ) -> tuple[np.ndarray, dict[str, np.ndarray], dict[str, np.ndarray]]:
         """Build likelihood matrices, dropping nuisance parameters with zero shifts."""
         n = len(self.measurements)
         V_stat = self.V_stat
@@ -113,8 +122,8 @@ class GVMCombination:
         V_blue = V_stat + V_syst
         V_inv = np.linalg.inv(V_blue)
 
-        C_inv = {}
-        Gamma_factors = {}
+        C_inv: dict[str, np.ndarray] = {}
+        Gamma_factors: dict[str, np.ndarray] = {}
         for src, sigma in self.syst.items():
             if src in self.uncertain_systematics:
                 rho = self.corr[src]
@@ -131,7 +140,11 @@ class GVMCombination:
                 Gamma_factors[src] = Gamma
         return V_inv, C_inv, Gamma_factors
     
-    def _reduce_corr(self, rho, src_name=None):
+    def _reduce_corr(
+        self,
+        rho: np.ndarray,
+        src_name: Optional[str] = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Collapse fully correlated or anticorrelated entries into one nuisance parameter."""
         n = rho.shape[0]
         groups = []
@@ -176,9 +189,13 @@ class GVMCombination:
     
     # Fitting
 
-    def minimize(self, fixed=None, update=True):
+    def minimize(
+        self,
+        fixed: Optional[Mapping[str, float]] = None,
+        update: bool = True,
+    ) -> FitResult:
         """Minimise the likelihood, optionally fixing parameters and storing the result."""
-        fixed = fixed or {}
+        fixed_params: Mapping[str, float] = fixed or {}
 
         names = ['mu']
         for key in self.Gamma:
@@ -192,7 +209,7 @@ class GVMCombination:
         free_names = []
         x0 = []
         for i, n in enumerate(names):
-            if n not in fixed:
+            if n not in fixed_params:
                 free_idx.append(i)
                 free_names.append(n)
                 x0.append(initial[i])
@@ -200,7 +217,7 @@ class GVMCombination:
         # Evaluate directly when every parameter is fixed.
         if len(x0) == 0:
             params = list(initial)
-            for n, val in fixed.items():
+            for n, val in fixed_params.items():
                 params[names.index(n)] = val
             mu = params[0]
             theta_flat = params[1:]
@@ -220,11 +237,11 @@ class GVMCombination:
                 self.fit_results = result
             return result
 
-        def f(arr):
+        def f(arr: Sequence[float]) -> float:
             params = list(initial)
             for val, idx in zip(arr, free_idx):
                 params[idx] = val
-            for n, val in fixed.items():
+            for n, val in fixed_params.items():
                 params[names.index(n)] = val
             mu = params[0]
             theta_flat = params[1:]
@@ -241,7 +258,7 @@ class GVMCombination:
         values = dict(zip(names, initial))
         for val, idx in zip(m.values, free_idx):
             values[names[idx]] = val
-        for n, v in fixed.items():
+        for n, v in fixed_params.items():
             values[n] = v
 
         result = FitResult(
@@ -253,28 +270,38 @@ class GVMCombination:
             self.fit_results = result
         return result
     
-    def fit(self, fixed=None, update=True):
+    def fit(
+        self,
+        fixed: Optional[Mapping[str, float]] = None,
+        update: bool = True,
+    ) -> FitResult:
         """Prepare the model if needed, then minimise the likelihood."""
-        if self.V_inv is None or not self.Gamma:
+        if not self.Gamma:
             self.prepare()
         return self.minimize(fixed=fixed, update=update)
     
     # Confidence intervals
 
-    def likelihood_ratio(self, mu):
+    def likelihood_ratio(self, mu: float) -> float:
         """Return the profile likelihood-ratio statistic at mu."""
         best = self.fit_results or self.minimize()
-        nll_best = best.nll if isinstance(best, FitResult) else _nll_fn(self, best['mu'], *best['thetas'])
+        nll_best = best.nll
         res_mu = self.minimize(fixed={'mu': mu}, update=False)
-        nll_mu = res_mu.nll if isinstance(res_mu, FitResult) else res_mu['nll']
+        nll_mu = res_mu.nll
         return 2 * (nll_mu - nll_best)
 
-    def confidence_interval(self, step=0.01, tol=0.001, max_iter=1000, cl_val=0.683):
+    def confidence_interval(
+        self,
+        step: float = 0.01,
+        tol: float = 0.001,
+        max_iter: int = 1000,
+        cl_val: float = 0.683,
+    ) -> tuple[float, float, float]:
         """Return the Bartlett-corrected interval as (lower, upper, half_width)."""
+        fit = self.fit_results or self.minimize()
         b_profile, _ = _bartlett_correction_fn(self)
         thr = b_profile * (norm.ppf(0.5 * (1.0 + cl_val)) ** 2)
-        fit = self.fit_results or self.minimize()
-        mu_hat = fit.mu if isinstance(fit, FitResult) else fit['mu']
+        mu_hat = fit.mu
         q0 = self.likelihood_ratio(mu_hat)
         up = mu_hat
         q_up = q0
@@ -314,24 +341,17 @@ class GVMCombination:
     
     # Goodness of fit
 
-    def goodness_of_fit(self):
+    def goodness_of_fit(self) -> float:
         """Return the Bartlett-corrected goodness-of-fit statistic."""
-        fit = self.fit_results if self.fit_results else self.minimize()
-        mu = fit.mu if isinstance(fit, FitResult) else fit['mu']
-        thetas = fit.thetas if isinstance(fit, FitResult) else fit['thetas']
+        fit = self.fit_results or self.minimize()
+        mu = fit.mu
 
         # Split the flat nuisance-parameter array by systematic source.
-        thetas = np.asarray(thetas)
-        if thetas.size == 0:
-            q = 2 * _nll_fn(self, mu)
-            _, b_chi2 = _bartlett_correction_fn(self)
-            return q * (len(self.measurements) - 1) / b_chi2
-        if not isinstance(thetas[0], (list, np.ndarray)):
-            keys = list(self.C_inv.keys())
-            sizes = [self.C_inv[k].shape[0] for k in keys]
-            idx = np.cumsum([0] + sizes)
-            thetas = [np.asarray(thetas[idx[i]:idx[i+1]])
-                      for i in range(len(keys))]
+        theta_flat = np.asarray(fit.thetas)
+        keys = list(self.C_inv)
+        sizes = [self.C_inv[key].shape[0] for key in keys]
+        idx = np.cumsum([0] + sizes)
+        thetas = [theta_flat[idx[i]:idx[i + 1]] for i in range(len(keys))]
 
         q = 2 * _nll_fn(self, mu, *thetas)
         _, b_chi2 = _bartlett_correction_fn(self)

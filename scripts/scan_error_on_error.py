@@ -1,4 +1,7 @@
 """Scan a global scaling factor for all error-on-error values."""
+
+from __future__ import annotations
+
 import argparse
 import glob as globmod
 import sys
@@ -13,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from gvm import GVMCombination, build_input_data
 
 
-def find_default_config():
+def find_default_config() -> str:
     """Return the only YAML configuration in input/."""
     yamls = sorted(globmod.glob("input/*.yaml")) + sorted(globmod.glob("input/*.yml"))
     if len(yamls) == 0:
@@ -26,7 +29,7 @@ def find_default_config():
     return yamls[0]
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Lambda scan over error-on-error.")
     p.add_argument("--config", type=str, default=None,
                    help="Path to the YAML config (default: auto-discover in input/).")
@@ -40,7 +43,7 @@ def parse_args():
     return p.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse_args()
     config = Path(args.config).resolve() if args.config else Path(find_default_config()).resolve()
     output = Path(args.output).resolve()
@@ -68,8 +71,9 @@ def main():
         for sname, eps0 in base_eps.items():
             scaled = lam * eps0
             info.uncertain_systematics[sname] = scaled
-        comb.set_input_data(info)
-        cv.append(comb.fit_results.mu)
+        comb.set_input_data(info, refit=False)
+        fit = comb.fit()
+        cv.append(fit.mu)
         l1, u1, _ = comb.confidence_interval(cl_val=0.683)
         l2, u2, _ = comb.confidence_interval(cl_val=0.955)
         lo_1.append(l1); hi_1.append(u1)

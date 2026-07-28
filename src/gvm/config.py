@@ -1,10 +1,19 @@
 """Parse and validate combination configuration."""
 
+from __future__ import annotations
+
 import os
 import warnings
 from dataclasses import dataclass
+from typing import Literal, Union
+
 import numpy as np
 import yaml
+
+
+ErrorOnError = Union[float, np.ndarray]
+ErrorOnErrorType = Literal['dependent', 'independent']
+
 
 @dataclass
 class input_data:
@@ -13,13 +22,13 @@ class input_data:
     name: str
     n_meas: int
     n_syst: int
-    labels: list
-    measurements: dict
+    labels: list[str]
+    measurements: dict[str, float]
     V_stat: np.ndarray
-    syst: dict
-    corr: dict
-    eoe_type: dict
-    uncertain_systematics: dict
+    syst: dict[str, np.ndarray]
+    corr: dict[str, np.ndarray]
+    eoe_type: dict[str, ErrorOnErrorType]
+    uncertain_systematics: dict[str, ErrorOnError]
 
 
 def build_input_data(path: str) -> input_data:
@@ -46,7 +55,9 @@ def build_input_data(path: str) -> input_data:
     except KeyError as exc:
         raise KeyError('Data configuration must define "measurements"') from exc
 
-    labels, measurements, stat_err = [], {}, []
+    labels: list[str] = []
+    measurements: dict[str, float] = {}
+    stat_err: list[float] = []
     for m in meas_entries:
         try:
             label = m['label']
@@ -78,10 +89,10 @@ def build_input_data(path: str) -> input_data:
         raise KeyError('Configuration must define "syst" section') from exc
 
     meas_map = {m: i for i, m in enumerate(labels)}
-    syst = {}
-    corr = {}
-    eoe_type = {}
-    uncertain_systematics = {}
+    syst: dict[str, np.ndarray] = {}
+    corr: dict[str, np.ndarray] = {}
+    eoe_type: dict[str, ErrorOnErrorType] = {}
+    uncertain_systematics: dict[str, ErrorOnError] = {}
 
     for item in syst_entries:
         sname = item['name']

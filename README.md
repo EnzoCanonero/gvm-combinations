@@ -74,6 +74,13 @@ pip install -e .
 This installs the `gvm` package and all its dependencies (`numpy`, `PyYAML`,
 `iminuit`, `scipy`, `matplotlib`).
 
+For development, install the optional type-checking dependencies and run mypy:
+
+```bash
+pip install -e ".[dev]"
+python -m mypy
+```
+
 ## Quick Start
 
 ```python

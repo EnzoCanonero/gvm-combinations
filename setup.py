@@ -18,4 +18,10 @@ setup(
         "scipy",
         "matplotlib",
     ],
+    extras_require={
+        "dev": [
+            "mypy",
+            "types-PyYAML",
+        ],
+    },
 )

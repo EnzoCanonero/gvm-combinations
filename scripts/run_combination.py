@@ -1,4 +1,7 @@
 """Run a GVM combination and write summary results."""
+
+from __future__ import annotations
+
 import argparse
 import glob as globmod
 import sys
@@ -13,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from gvm import GVMCombination, build_input_data
 
 
-def find_default_config():
+def find_default_config() -> str:
     """Return the only YAML configuration in input/."""
     yamls = sorted(globmod.glob("input/*.yaml")) + sorted(globmod.glob("input/*.yml"))
     if len(yamls) == 0:
@@ -26,7 +29,7 @@ def find_default_config():
     return yamls[0]
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run a GVM combination.")
     p.add_argument("--config", type=str, default=None,
                    help="Path to the YAML config (default: auto-discover in input/).")
@@ -35,7 +38,7 @@ def parse_args():
     return p.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse_args()
     config = Path(args.config).resolve() if args.config else Path(find_default_config()).resolve()
     output = Path(args.output).resolve()
@@ -43,9 +46,9 @@ def main():
 
     data = build_input_data(str(config))
     comb = GVMCombination(data)
-    comb.fit()
+    fit = comb.fit()
 
-    mu = comb.fit_results.mu
+    mu = fit.mu
     lo_1, hi_1, hw_1 = comb.confidence_interval(cl_val=0.683)
     lo_2, hi_2, hw_2 = comb.confidence_interval(cl_val=0.955)
     gof = comb.goodness_of_fit()
