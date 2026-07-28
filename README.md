@@ -140,17 +140,18 @@ More information can be found in the [toy tutorial](notebooks/toy/toy_tutorial.i
 
 ## Runs
 
-The `runs/` directory contains ready-to-use examples that produce numerical
-results and plots.  Two generic scripts drive every run:
+The `scripts/` directory contains two reusable command-line drivers, while
+`runs/` contains ready-to-use example cases with their inputs and generated
+outputs:
 
-* **`run.py`** — baseline fit: prints the MLE, confidence intervals, and GOF;
-  saves `results.yaml` and `summary.png`.
-* **`scan.py`** — lambda scan: multiplies all error-on-error values by a
-  global factor $\lambda$ and tracks how $\mu$, the CI, and the GOF evolve;
-  saves `scan.png` and `gof.png`.
+* **`scripts/run_combination.py`** — baseline fit: prints the MLE, confidence
+  intervals, and GOF; saves `results.yaml` and `summary.png`.
+* **`scripts/scan_error_on_error.py`** — lambda scan: multiplies all
+  error-on-error values by a global factor $\lambda$ and tracks how $\mu$, the
+  CI, and the GOF evolve; saves `scan.png` and `gof.png`.
 
 Both accept `--config` and `--output` (defaults: the single YAML in `input/`
-and `output/`).  `scan.py` also accepts:
+and `output/`).  `scan_error_on_error.py` also accepts:
 
 * `--lambda-range MIN MAX` — scan range (default: `0.0 1.2`).
 * `--n-points N` — number of scan points (default: `14`).
@@ -165,17 +166,19 @@ and `output/`).  `scan.py` also accepts:
 
 ```bash
 # Baseline fit
-python runs/run.py --config runs/toy_2meas/input/toy2.yaml --output runs/toy_2meas/output
-python runs/run.py --config runs/toy_4meas/input/toy4.yaml --output runs/toy_4meas/output
-python runs/run.py --config runs/top_mass_outlier/input/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
+python scripts/run_combination.py --config runs/toy_2meas/input/toy2.yaml --output runs/toy_2meas/output
+python scripts/run_combination.py --config runs/toy_4meas/input/toy4.yaml --output runs/toy_4meas/output
+python scripts/run_combination.py --config runs/top_mass_outlier/input/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
 
 # Lambda scan
-python runs/scan.py --config runs/toy_2meas/input/toy2.yaml --output runs/toy_2meas/output
-python runs/scan.py --config runs/toy_4meas/input/toy4.yaml --output runs/toy_4meas/output
-python runs/scan.py --config runs/top_mass_outlier/input/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
+python scripts/scan_error_on_error.py --config runs/toy_2meas/input/toy2.yaml --output runs/toy_2meas/output
+python scripts/scan_error_on_error.py --config runs/toy_4meas/input/toy4.yaml --output runs/toy_4meas/output
+python scripts/scan_error_on_error.py --config runs/top_mass_outlier/input/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
 
 # Or cd into a run directory (auto-discovers input/*.yaml, outputs to output/)
-cd runs/toy_2meas && python ../run.py && python ../scan.py
+cd runs/toy_2meas
+python ../../scripts/run_combination.py
+python ../../scripts/scan_error_on_error.py
 ```
 
 ## Notebooks
@@ -203,12 +206,13 @@ GVM-Combinations/
 │   ├── likelihood.py           # Log-likelihood construction
 │   ├── fit_results.py          # FitResult dataclass
 │   └── minuit_wrapper.py       # iMinuit interface
+├── scripts/
+│   ├── run_combination.py      # Generic fit script
+│   └── scan_error_on_error.py  # Generic lambda scan script
 ├── runs/
-│   ├── run.py                  # Generic fit script (config as argument)
-│   ├── scan.py                 # Generic lambda scan script
-│   ├── toy_2meas/input/        # 2-measurement example (incompatible, correlated)
-│   ├── toy_4meas/input/        # 4-measurement example (outlier, independent)
-│   └── top_mass_outlier/input/ # Top-mass combination with fictitious outlier
+│   ├── toy_2meas/              # 2-measurement example (incompatible, correlated)
+│   ├── toy_4meas/              # 4-measurement example (outlier, independent)
+│   └── top_mass_outlier/       # Top-mass combination with fictitious outlier
 └── notebooks/
     ├── toy/                    # Introductory tutorial
     │   ├── toy_tutorial.ipynb

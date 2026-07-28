@@ -1,8 +1,8 @@
 """Run a GVM combination and produce summary results.
 
 Usage:
-    cd runs/toy_2meas && python ../run.py
-    python runs/run.py --config runs/toy_2meas/input/toy2.yaml
+    cd runs/toy_2meas && python ../../scripts/run_combination.py
+    python scripts/run_combination.py --config runs/toy_2meas/input/toy2.yaml
 """
 import argparse
 import glob as globmod

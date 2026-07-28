@@ -4,9 +4,9 @@ Scans a global scaling factor lambda that multiplies all error-on-error
 values uniformly, tracking how mu_hat, CI, and GOF evolve.
 
 Usage:
-    cd runs/toy_2meas && python ../scan.py
-    python runs/scan.py --config runs/toy_2meas/input/toy2.yaml
-    python runs/scan.py --config runs/toy_4meas/input/toy4.yaml --lambda-range 0 2.0
+    cd runs/toy_2meas && python ../../scripts/scan_error_on_error.py
+    python scripts/scan_error_on_error.py --config runs/toy_2meas/input/toy2.yaml
+    python scripts/scan_error_on_error.py --config runs/toy_4meas/input/toy4.yaml --lambda-range 0 2.0
 """
 import argparse
 import glob as globmod
