@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import os
 import warnings
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, Union
 
 import numpy as np
@@ -31,18 +31,32 @@ class input_data:
     uncertain_systematics: dict[str, ErrorOnError]
 
 
+def _resolve_path(value: str, base_dir: Path) -> Path:
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        return path
+    return (base_dir / path).resolve()
+
+
 def build_input_data(path: str) -> input_data:
     """Build combination input data from a YAML file."""
-    with open(path, 'r') as f:
+    config_path = Path(path).expanduser().resolve()
+    with config_path.open('r') as f:
         data = yaml.safe_load(f)
 
-    yaml_dir = os.path.dirname(os.path.abspath(path))
+    yaml_dir = config_path.parent
 
     try:
         glob = data['global']
-        corr_dir = glob.get('corr_dir', '')
-        if corr_dir and not os.path.isabs(corr_dir):
-            corr_dir = os.path.join(yaml_dir, corr_dir)
+        matrix_dir = glob.get('matrix_dir')
+        if matrix_dir is None and 'corr_dir' in glob:
+            matrix_dir = glob['corr_dir']
+            warnings.warn(
+                '"global.corr_dir" is deprecated; use "global.matrix_dir" instead',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        matrix_root = _resolve_path(matrix_dir, yaml_dir) if matrix_dir else yaml_dir
         name = glob['name']
         n_meas = int(glob['n_meas'])
         n_syst = int(glob['n_syst'])
@@ -74,10 +88,7 @@ def build_input_data(path: str) -> input_data:
 
     stat_cov_path = combo.get('stat_cov_path')
     if stat_cov_path:
-        stat_cov_path = stat_cov_path.replace('${global.corr_dir}', corr_dir)
-        if not os.path.isabs(stat_cov_path):
-            stat_cov_path = os.path.join(corr_dir, stat_cov_path)
-        V_stat = np.loadtxt(stat_cov_path, dtype=float)
+        V_stat = np.loadtxt(_resolve_path(stat_cov_path, matrix_root), dtype=float)
     elif stat_err:
         V_stat = np.diag(np.array(stat_err, dtype=float) ** 2)
     else:
@@ -111,10 +122,7 @@ def build_input_data(path: str) -> input_data:
         elif corr_spec == 'ones':
             corr_mat = np.ones((n_meas, n_meas))
         else:
-            path_corr = corr_spec.replace('${global.corr_dir}', corr_dir)
-            if not os.path.isabs(path_corr):
-                path_corr = os.path.join(corr_dir, path_corr)
-            corr_mat = np.loadtxt(path_corr, dtype=float)
+            corr_mat = np.loadtxt(_resolve_path(corr_spec, matrix_root), dtype=float)
 
         eoe = item.get('error-on-error', {})
         eps_val = eoe.get('value', 0.0)

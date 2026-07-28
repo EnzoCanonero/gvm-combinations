@@ -1,5 +1,5 @@
 global:
-  corr_dir: correlations_fict
+  matrix_dir: correlations_fict
   n_meas: 16
   n_syst: 26
   name: LHC

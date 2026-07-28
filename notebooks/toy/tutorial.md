@@ -40,7 +40,6 @@ In the configuration file, errors-on-error are explicitly set to zero, and their
       name: diag_corr
       n_meas: 2
       n_syst: 1
-      corr_dir: correlations
 
     data:
       measurements:
@@ -90,7 +89,7 @@ print(f'χ² = {chi_2:.3f}, significance = {significance} \n')
       name: hybrid_corr
       n_meas: 2
       n_syst: 1
-      corr_dir: correlations
+      matrix_dir: correlations
 
     data:
       measurements:
@@ -139,7 +138,6 @@ print(f'χ² = {chi_2:.3f}, significance = {significance} \n')
       name: full_corr
       n_meas: 2
       n_syst: 1
-      corr_dir: correlations
 
     data:
       measurements:
@@ -192,7 +190,7 @@ Unlike systematic uncertainties — which can be described through correlation m
       name: stat_cov
       n_meas: 2
       n_syst: 1
-      corr_dir: correlations
+      matrix_dir: correlations
 
     data:
       stat_cov_path: stat_cov.txt
@@ -866,7 +864,6 @@ global:
   name: toy4_compatible
   n_meas: 4
   n_syst: 1
-  corr_dir: correlations
 
 data:
   measurements:

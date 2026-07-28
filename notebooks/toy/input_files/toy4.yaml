@@ -2,7 +2,6 @@ global:
   name: toy4_compatible
   n_meas: 4
   n_syst: 1
-  corr_dir: correlations
 
 data:
   measurements:

@@ -2,7 +2,7 @@ global:
   name: stat_cov
   n_meas: 2
   n_syst: 1
-  corr_dir: correlations
+  matrix_dir: correlations
 
 data:
   stat_cov_path: stat_cov.txt

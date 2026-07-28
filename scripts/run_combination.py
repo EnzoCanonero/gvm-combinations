@@ -17,13 +17,13 @@ from gvm import GVMCombination, build_input_data
 
 
 def find_default_config() -> str:
-    """Return the only YAML configuration in input/."""
-    yamls = sorted(globmod.glob("input/*.yaml")) + sorted(globmod.glob("input/*.yml"))
+    """Return the only YAML configuration in the current directory."""
+    yamls = sorted(globmod.glob("*.yaml")) + sorted(globmod.glob("*.yml"))
     if len(yamls) == 0:
-        raise FileNotFoundError("No .yaml files found in input/.")
+        raise FileNotFoundError("No .yaml files found in the current directory.")
     if len(yamls) > 1:
         raise RuntimeError(
-            f"Multiple .yaml files found in input/: {yamls}. "
+            f"Multiple .yaml files found in the current directory: {yamls}. "
             "Use --config to specify which one."
         )
     return yamls[0]
@@ -32,7 +32,7 @@ def find_default_config() -> str:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run a GVM combination.")
     p.add_argument("--config", type=str, default=None,
-                   help="Path to the YAML config (default: auto-discover in input/).")
+                   help="Path to the YAML config (default: only YAML in the current directory).")
     p.add_argument("--output", type=str, default="output",
                    help="Output directory (default: output/).")
     return p.parse_args()

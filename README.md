@@ -99,10 +99,12 @@ print(f"mu = {comb.fit_results.mu:.4f}  68% CI = ({lo:.4f}, {hi:.4f})")
 The combination is driven by a YAML configuration file with three main
 sections:
 
-* `global` – directories containing correlation matrices and statistical
-  covariance files.  It must also define `name`, `n_meas` and `n_syst`
-  giving the combination name and the expected numbers of measurements and
-  systematic sources.
+* `global` – combination metadata. It must define `name`, `n_meas` and
+  `n_syst`, giving the combination name and the expected numbers of
+  measurements and systematic sources. The optional `matrix_dir` sets the
+  base directory for correlation matrices and statistical covariance files.
+  Relative file paths are resolved from `matrix_dir` when set, or from the
+  YAML file's directory otherwise.
 * `data` – the measurement names and central values together with their
   statistical uncertainties.  Statistical errors may be given explicitly or a
   `stat_cov_path` can provide a covariance matrix.  In either case the
@@ -157,8 +159,9 @@ outputs:
   error-on-error values by a global factor $\lambda$ and tracks how $\mu$, the
   CI, and the GOF evolve; saves `scan.png` and `gof.png`.
 
-Both accept `--config` and `--output` (defaults: the single YAML in `input/`
-and `output/`).  `scan_error_on_error.py` also accepts:
+Both accept `--config` and `--output` (defaults: the single YAML in the current
+run directory and its `output/` directory).  `scan_error_on_error.py` also
+accepts:
 
 * `--lambda-range MIN MAX` — scan range (default: `0.0 1.2`).
 * `--n-points N` — number of scan points (default: `14`).
@@ -173,16 +176,16 @@ and `output/`).  `scan_error_on_error.py` also accepts:
 
 ```bash
 # Baseline fit
-python scripts/run_combination.py --config runs/toy_2meas/input/toy2.yaml --output runs/toy_2meas/output
-python scripts/run_combination.py --config runs/toy_4meas/input/toy4.yaml --output runs/toy_4meas/output
-python scripts/run_combination.py --config runs/top_mass_outlier/input/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
+python scripts/run_combination.py --config runs/toy_2meas/toy2.yaml --output runs/toy_2meas/output
+python scripts/run_combination.py --config runs/toy_4meas/toy4.yaml --output runs/toy_4meas/output
+python scripts/run_combination.py --config runs/top_mass_outlier/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
 
 # Lambda scan
-python scripts/scan_error_on_error.py --config runs/toy_2meas/input/toy2.yaml --output runs/toy_2meas/output
-python scripts/scan_error_on_error.py --config runs/toy_4meas/input/toy4.yaml --output runs/toy_4meas/output
-python scripts/scan_error_on_error.py --config runs/top_mass_outlier/input/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
+python scripts/scan_error_on_error.py --config runs/toy_2meas/toy2.yaml --output runs/toy_2meas/output
+python scripts/scan_error_on_error.py --config runs/toy_4meas/toy4.yaml --output runs/toy_4meas/output
+python scripts/scan_error_on_error.py --config runs/top_mass_outlier/LHC_comb_fictitious_meas.yaml --output runs/top_mass_outlier/output
 
-# Or cd into a run directory (auto-discovers input/*.yaml, outputs to output/)
+# Or cd into a run directory (auto-discovers its YAML, outputs to output/)
 cd runs/toy_2meas
 python ../../scripts/run_combination.py
 python ../../scripts/scan_error_on_error.py
@@ -218,8 +221,16 @@ GVM-Combinations/
 │   └── scan_error_on_error.py  # Generic lambda scan script
 ├── runs/
 │   ├── toy_2meas/              # 2-measurement example (incompatible, correlated)
+│   │   ├── toy2.yaml           # Run configuration
+│   │   ├── correlations/       # Correlation matrices
+│   │   └── output/             # Generated results
 │   ├── toy_4meas/              # 4-measurement example (outlier, independent)
+│   │   ├── toy4.yaml           # Run configuration
+│   │   └── output/             # Generated results
 │   └── top_mass_outlier/       # Top-mass combination with fictitious outlier
+│       ├── LHC_comb_fictitious_meas.yaml  # Run configuration
+│       ├── correlations_fict/              # Correlation matrices
+│       └── output/                         # Generated results
 └── notebooks/
     ├── toy/                    # Introductory tutorial
     │   ├── toy_tutorial.ipynb

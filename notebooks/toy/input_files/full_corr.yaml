@@ -2,7 +2,6 @@ global:
   name: full_corr
   n_meas: 2
   n_syst: 1
-  corr_dir: correlations
 
 data:
   measurements:
