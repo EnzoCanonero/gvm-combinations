@@ -84,14 +84,21 @@ python -m mypy
 ## Quick Start
 
 ```python
-from gvm import GVMCombination, build_input_data
+import matplotlib.pyplot as plt
+
+from gvm import GVMCombination, build_input_data, plot_combination_summary
 
 data = build_input_data("path/to/config.yaml")
 comb = GVMCombination(data)
-comb.fit()
+fit = comb.fit()
 
-lo, hi, hw = comb.confidence_interval(cl_val=0.683)
-print(f"mu = {comb.fit_results.mu:.4f}  68% CI = ({lo:.4f}, {hi:.4f})")
+lo_68, hi_68, _ = comb.confidence_interval(cl_val=0.683)
+lo_95, hi_95, _ = comb.confidence_interval(cl_val=0.955)
+print(f"mu = {fit.mu:.4f}  68% CI = ({lo_68:.4f}, {hi_68:.4f})")
+
+fig, ax = plt.subplots(figsize=(10, 6))
+plot_combination_summary(ax, data, fit.mu, (lo_68, hi_68), (lo_95, hi_95))
+fig.tight_layout()
 ```
 
 ## Configuration File
@@ -215,6 +222,7 @@ GVM-Combinations/
 │   ├── config.py               # YAML parsing & validation
 │   ├── likelihood.py           # Log-likelihood construction
 │   ├── fit_results.py          # FitResult dataclass
+│   ├── plotting.py             # Summary plot
 │   └── minuit_wrapper.py       # iMinuit interface
 ├── scripts/
 │   ├── run_combination.py      # Generic fit script
@@ -233,7 +241,7 @@ GVM-Combinations/
 │       └── output/                         # Generated results
 └── notebooks/
     ├── toy/                    # Introductory tutorial
-    │   ├── toy_tutorial.ipynb
-    │   └── tutorial.md
+    │   └── toy_tutorial.ipynb
     └── top-mass/               # Top-mass combination tutorial
+        └── top_mass_combination.ipynb
 ```

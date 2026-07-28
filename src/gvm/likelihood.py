@@ -65,7 +65,7 @@ def compute_FIM(
     sizes = [comb.C_inv[k].shape[0] for k in keys]
 
     tot = sum(sizes)
-    F = np.zeros((1 + tot, 1 + tot))
+    F: np.ndarray = np.zeros((1 + tot, 1 + tot))
     F[0, 0] = np.sum(comb.V_inv)
     start_idx = np.cumsum([0] + sizes[:-1])
     idxs = [np.arange(sz) + s + 1 for sz, s in zip(sizes, start_idx)]

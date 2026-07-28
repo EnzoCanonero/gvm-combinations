@@ -237,12 +237,13 @@ def validate_input_data(input_data: input_data) -> None:
     for name, typ in input_data.eoe_type.items():
         if typ != 'independent':
             continue
+        if name not in input_data.uncertain_systematics:
+            continue
         expected = np.count_nonzero(input_data.syst[name])
-        if name in input_data.uncertain_systematics:
-            val = input_data.uncertain_systematics[name]
-            if not isinstance(val, (list, tuple, np.ndarray)):
-                input_data.uncertain_systematics[name] = np.repeat(float(val), expected)
-        eps_raw = input_data.uncertain_systematics.get(name, np.zeros(expected))
+        val = input_data.uncertain_systematics[name]
+        if not isinstance(val, (list, tuple, np.ndarray)):
+            input_data.uncertain_systematics[name] = np.repeat(float(val), expected)
+        eps_raw = input_data.uncertain_systematics[name]
         eps = np.asarray(eps_raw, dtype=float)
         if eps.shape[0] != expected:
             if eps.shape[0] == input_data.n_meas:

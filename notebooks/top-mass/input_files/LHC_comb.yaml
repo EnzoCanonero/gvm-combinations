@@ -5,49 +5,49 @@ global:
   name: LHC
 data:
   measurements:
-  - label: a
+  - label: ATLAS 7 dilep.
     central: 173.79
     stat_error: 0.54
-  - label: b
+  - label: ATLAS 7 l+jets
     central: 172.33
     stat_error: 0.75
-  - label: c
+  - label: ATLAS 7 all-had.
     central: 175.06
     stat_error: 1.35
-  - label: d
+  - label: ATLAS 8 dilep.
     central: 172.99
     stat_error: 0.41
-  - label: e
+  - label: ATLAS 8 l+jets
     central: 172.08
     stat_error: 0.39
-  - label: f
+  - label: ATLAS 8 all-had.
     central: 173.72
     stat_error: 0.55
-  - label: g
+  - label: CMS 7 dilep.
     central: 172.5
     stat_error: 0.43
-  - label: h
+  - label: CMS 7 l+jets
     central: 173.49
     stat_error: 0.43
-  - label: i
+  - label: CMS 7 all-had.
     central: 173.49
     stat_error: 0.69
-  - label: j
+  - label: CMS 8 dilep.
     central: 172.22
     stat_error: 0.18
-  - label: k
+  - label: CMS 8 l+jets
     central: 172.35
     stat_error: 0.16
-  - label: l
+  - label: CMS 8 all-had.
     central: 172.32
     stat_error: 0.25
-  - label: m
+  - label: CMS 8 single top
     central: 172.95
     stat_error: 0.77
-  - label: n
+  - label: CMS 8 J/psi
     central: 173.5
     stat_error: 3.0
-  - label: o
+  - label: CMS 8 sec. vtx.
     central: 173.68
     stat_error: 0.2
 syst:

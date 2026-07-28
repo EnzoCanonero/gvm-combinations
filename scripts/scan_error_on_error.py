@@ -70,7 +70,10 @@ def main() -> None:
         info = deepcopy(base_info)
         for sname, eps0 in base_eps.items():
             scaled = lam * eps0
-            info.uncertain_systematics[sname] = scaled
+            if np.any(np.asarray(scaled, dtype=float) != 0.0):
+                info.uncertain_systematics[sname] = scaled
+            else:
+                info.uncertain_systematics.pop(sname, None)
         comb.set_input_data(info, refit=False)
         fit = comb.fit()
         cv.append(fit.mu)

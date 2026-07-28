@@ -6,14 +6,14 @@ import argparse
 import glob as globmod
 import sys
 from pathlib import Path
-import numpy as np
+
 import matplotlib.pyplot as plt
 from scipy.stats import chi2, norm
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from gvm import GVMCombination, build_input_data
+from gvm import GVMCombination, build_input_data, plot_combination_summary
 
 
 def find_default_config() -> str:
@@ -55,7 +55,6 @@ def main() -> None:
     p_val = 1 - chi2.cdf(gof, df=data.n_meas - 1)
     sig = norm.ppf(1 - p_val / 2)
 
-    # Terminal output
     print(f"\n=== GVM Combination: {data.name} ===")
     print(f"mu_hat      = {mu:.4f}")
     print(f"68.3% CI    = ({lo_1:.4f}, {hi_1:.4f}),  half-width = {hw_1:.4f}")
@@ -64,7 +63,6 @@ def main() -> None:
     print(f"p-value     = {p_val:.4f}")
     print(f"significance = {sig:.2f} sigma")
 
-    # Results file
     results = {
         "name": data.name,
         "mu_hat": float(mu),
@@ -85,34 +83,17 @@ def main() -> None:
     with open(output / "results.yaml", "w") as f:
         yaml.dump(results, f, default_flow_style=False, sort_keys=False)
 
-    # Summary plot
-    labels = data.labels
-    centrals = np.array([data.measurements[l] for l in labels])
-    stat_diag = np.sqrt(np.diag(data.V_stat))
-
-    syst_sq = np.zeros(data.n_meas)
-    for src, sigma in data.syst.items():
-        syst_sq += sigma ** 2
-    total_err = np.sqrt(stat_diag ** 2 + syst_sq)
-
-    x_pos = np.arange(data.n_meas)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.axhspan(lo_2, hi_2, color="yellow", alpha=0.25, label="95.5% CI")
-    ax.axhspan(lo_1, hi_1, color="green", alpha=0.5, label="68.3% CI")
-    ax.axhline(mu, color="red", linewidth=1.2, label=r"MLE for $\mu$")
-    ax.errorbar(x_pos, centrals, yerr=total_err, fmt="o", color="blue",
-                capsize=5, markersize=7, label="Data Points")
-
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(labels, fontsize=14)
-    ax.set_ylabel("Value", fontsize=16)
-    ax.legend(fontsize=12, loc="upper right")
-    all_lo = [lo_2, min(centrals - total_err)]
-    all_hi = [hi_2, max(centrals + total_err)]
-    y_span = max(all_hi) - min(all_lo)
-    ax.set_ylim(min(all_lo) - 0.15 * y_span, max(all_hi) + 0.15 * y_span)
-    ax.grid(True, linestyle="--", linewidth=0.5)
+    figure_width = max(10.0, 0.7 * data.n_meas)
+    label_rotation = 50.0 if data.n_meas > 8 else 0.0
+    fig, ax = plt.subplots(figsize=(figure_width, 6))
+    plot_combination_summary(
+        ax,
+        data,
+        mu,
+        (lo_1, hi_1),
+        (lo_2, hi_2),
+        label_rotation=label_rotation,
+    )
     fig.tight_layout()
     fig.savefig(output / "summary.png", dpi=150)
     plt.close(fig)

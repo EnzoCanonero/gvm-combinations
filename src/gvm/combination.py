@@ -203,7 +203,7 @@ class GVMCombination:
                 names.append(f'{key}_{j}')
 
         y_vals = np.fromiter(self.measurements.values(), dtype=float)
-        initial = [np.mean(y_vals)] + [0.] * (len(names) - 1)
+        initial: list[float] = [float(np.mean(y_vals))] + [0.0] * (len(names) - 1)
 
         free_idx = []
         free_names = []
