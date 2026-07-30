@@ -198,17 +198,17 @@ python ../../scripts/run_combination.py
 python ../../scripts/scan_error_on_error.py
 ```
 
-## Notebooks
+## Tutorials
 
 The `notebooks/` directory contains educational material that explains and
 showcases the model step by step.  Unlike the runs, which produce standalone
 results, the notebooks are meant to be read interactively and walk the reader
 through the theory, the API, and the interpretation of the outputs.
 
-- [notebooks/toy/toy_tutorial.ipynb](notebooks/toy/toy_tutorial.ipynb) — Step-by-step
-  tutorial covering the GVM from scratch with toy examples.
-- [notebooks/top-mass/top_mass_combination.ipynb](notebooks/top-mass/top_mass_combination.ipynb) —
-  Top-mass combination example from [arXiv:2407.05322](https://arxiv.org/abs/2407.05322).
+- [Toy GVM tutorial](notebooks/toy/toy_tutorial.ipynb) — Step-by-step introduction
+  to the GVM using toy examples.
+- [Top-mass combination tutorial](notebooks/top-mass/top_mass_combination.ipynb) —
+  Application to the combination from [arXiv:2407.05322](https://arxiv.org/abs/2407.05322).
 
 ## Project Structure
 
