@@ -90,8 +90,8 @@ Install the package in editable (development) mode:
 pip install -e .
 ```
 
-This installs the `gvm` package and all its dependencies (`numpy`, `PyYAML`,
-`iminuit`, `scipy`, `matplotlib`).
+Python 3.11 or newer is required. This installs the `gvm_combinations` package
+and all its dependencies (`numpy`, `PyYAML`, `iminuit`, `scipy`, `matplotlib`).
 
 ## Testing
 
@@ -101,7 +101,7 @@ For development, install the optional test and type-checking dependencies:
 pip install -e ".[dev]"
 python -m pytest
 python -m mypy
-python -m ruff check src/gvm scripts tests
+python -m ruff check src/gvm_combinations scripts tests
 ```
 
 ## Quick start
@@ -109,7 +109,7 @@ python -m ruff check src/gvm scripts tests
 ```python
 import matplotlib.pyplot as plt
 
-from gvm import GVMCombination, build_input_data, plot_combination_summary
+from gvm_combinations import GVMCombination, build_input_data, plot_combination_summary
 
 data = build_input_data("path/to/config.yaml")
 comb = GVMCombination(data)
@@ -239,8 +239,7 @@ through the theory, the API, and the interpretation of the outputs.
 GVM-Combinations/
 ├── .github/workflows/ci.yml   # Tests and type checking
 ├── pyproject.toml              # Package metadata & dependencies
-├── setup.py                    # Fallback for older pip versions
-├── src/gvm/                    # The statistical engine
+├── src/gvm_combinations/       # The statistical engine
 │   ├── __init__.py
 │   ├── combination.py          # GVMCombination class
 │   ├── config.py               # YAML parsing & validation

@@ -13,7 +13,7 @@ from scipy.stats import chi2, norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from gvm import GVMCombination, build_input_data, plot_combination_summary
+from gvm_combinations import GVMCombination, build_input_data, plot_combination_summary
 
 
 def find_default_config() -> str:

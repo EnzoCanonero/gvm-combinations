@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy.stats import norm
 
-from gvm import GVMCombination, build_input_data, input_data
+from gvm_combinations import GVMCombination, build_input_data, input_data
 
 ROOT = Path(__file__).resolve().parents[1]
 

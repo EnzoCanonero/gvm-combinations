@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.14"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -29,8 +29,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.11"
           cache: pip
       - run: python -m pip install -e ".[dev]"
-      - run: python -m ruff check src/gvm scripts tests
+      - run: python -m ruff check src/gvm_combinations scripts tests
       - run: python -m mypy

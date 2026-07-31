@@ -14,7 +14,7 @@ from scipy.stats import chi2, norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from gvm import GVMCombination, build_input_data
+from gvm_combinations import GVMCombination, build_input_data
 
 
 def find_default_config() -> str:
