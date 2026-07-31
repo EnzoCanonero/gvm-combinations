@@ -21,6 +21,8 @@ setup(
     extras_require={
         "dev": [
             "mypy",
+            "pytest",
+            "ruff",
             "types-PyYAML",
         ],
     },

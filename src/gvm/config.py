@@ -10,7 +10,6 @@ from typing import Literal, Union
 import numpy as np
 import yaml
 
-
 ErrorOnError = Union[float, np.ndarray]
 ErrorOnErrorType = Literal['dependent', 'independent']
 

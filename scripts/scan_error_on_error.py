@@ -5,10 +5,11 @@ from __future__ import annotations
 import argparse
 import glob as globmod
 import sys
-from pathlib import Path
 from copy import deepcopy
-import numpy as np
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.stats import chi2, norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -79,8 +80,10 @@ def main() -> None:
         cv.append(fit.mu)
         l1, u1, _ = comb.confidence_interval(cl_val=0.683)
         l2, u2, _ = comb.confidence_interval(cl_val=0.955)
-        lo_1.append(l1); hi_1.append(u1)
-        lo_2.append(l2); hi_2.append(u2)
+        lo_1.append(l1)
+        hi_1.append(u1)
+        lo_2.append(l2)
+        hi_2.append(u2)
 
         chi2_val = comb.goodness_of_fit()
         p = 1 - chi2.cdf(chi2_val, df=data.n_meas - 1)

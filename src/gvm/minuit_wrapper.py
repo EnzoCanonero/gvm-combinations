@@ -6,7 +6,6 @@ from collections.abc import Callable, Sequence
 
 from iminuit import Minuit  # type: ignore[import-untyped]
 
-
 ArrayFunction = Callable[[Sequence[float]], float]
 
 

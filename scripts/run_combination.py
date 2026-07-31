@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from scipy.stats import chi2, norm
 import yaml
+from scipy.stats import chi2, norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
