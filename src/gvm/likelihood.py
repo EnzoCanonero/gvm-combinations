@@ -33,8 +33,8 @@ def nll(comb: GVMCombination, mu: float, *thetas: np.ndarray) -> float:
             if eps_scalar > 0:
                 chi2_u += float(
                     (N_s + 1.0 / (2.0 * eps_scalar ** 2))
-                    * np.log(
-                        1. + 2. * eps_scalar ** 2 * theta @ Cinv @ theta
+                    * np.log1p(
+                        2. * eps_scalar ** 2 * theta @ Cinv @ theta
                     )
                 )
             else:
@@ -46,8 +46,8 @@ def nll(comb: GVMCombination, mu: float, *thetas: np.ndarray) -> float:
                 chi2_u += float(
                     np.sum(
                         (1 + 1.0 / (2.0 * eps_array[mask] ** 2))
-                        * np.log(
-                            1. + 2. * eps_array[mask] ** 2 * theta[mask] ** 2
+                        * np.log1p(
+                            2. * eps_array[mask] ** 2 * theta[mask] ** 2
                         )
                     )
                 )

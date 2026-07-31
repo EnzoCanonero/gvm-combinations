@@ -17,7 +17,7 @@ from .config import (
     validate_input_data,
 )
 from .fit_results import FitResult
-from .likelihood import nll as _nll_fn, bartlett_correction as _bartlett_correction_fn
+from .likelihood import bartlett_correction as _bartlett_correction_fn, nll as _nll_fn
 from .minuit_wrapper import minimize as _minimize
 
 
@@ -302,41 +302,32 @@ class GVMCombination:
         b_profile, _ = _bartlett_correction_fn(self)
         thr = b_profile * (norm.ppf(0.5 * (1.0 + cl_val)) ** 2)
         mu_hat = fit.mu
-        q0 = self.likelihood_ratio(mu_hat)
-        up = mu_hat
-        q_up = q0
-        down = mu_hat
-        q_down = q0
-        it = 0
-        while q_up <= thr and it < max_iter:
-            up += step
-            q_up = self.likelihood_ratio(up)
-            it += 1
-        it = 0
-        while q_down <= thr and it < max_iter:
-            down -= step
-            q_down = self.likelihood_ratio(down)
-            it += 1
-        step /= 2
-        it = 0
-        while abs(q_up - thr) > tol and it < max_iter:
-            if q_up > thr:
-                up -= step
+        if step <= 0.0:
+            raise ValueError("step must be positive")
+
+        def find_bound(direction: float) -> float:
+            inside = mu_hat
+            outside = mu_hat
+            for _ in range(max_iter):
+                outside += direction * step
+                if self.likelihood_ratio(outside) > thr:
+                    break
             else:
-                up += step
-            q_up = self.likelihood_ratio(up)
-            step /= 2
-            it += 1
-        step = step if step > 0 else 0.001
-        it = 0
-        while abs(q_down - thr) > tol and it < max_iter:
-            if q_down > thr:
-                down += step
-            else:
-                down -= step
-            q_down = self.likelihood_ratio(down)
-            step /= 2
-            it += 1
+                raise RuntimeError("Could not bracket confidence-interval boundary")
+
+            for _ in range(max_iter):
+                midpoint = 0.5 * (inside + outside)
+                q_mid = self.likelihood_ratio(midpoint)
+                if abs(q_mid - thr) <= tol:
+                    return midpoint
+                if q_mid <= thr:
+                    inside = midpoint
+                else:
+                    outside = midpoint
+            raise RuntimeError("Confidence-interval boundary did not converge")
+
+        down = find_bound(-1.0)
+        up = find_bound(1.0)
         return down, up, 0.5*(up - down)
     
     # Goodness of fit
