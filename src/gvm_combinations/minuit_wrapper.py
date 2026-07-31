@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 
-from iminuit import Minuit  # type: ignore[import-untyped]
+from iminuit import Minuit
 
 ArrayFunction = Callable[[Sequence[float]], float]
 

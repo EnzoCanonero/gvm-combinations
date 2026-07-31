@@ -1,13 +1,10 @@
-from pathlib import Path
 from typing import Literal, Optional, Union
 
 import numpy as np
 from numpy.testing import assert_allclose
 from scipy.stats import norm
 
-from gvm_combinations import GVMCombination, build_input_data, input_data
-
-ROOT = Path(__file__).resolve().parents[1]
+from gvm_combinations import GVMCombination, input_data
 
 
 def _blue_data() -> input_data:
@@ -78,6 +75,22 @@ def _structured_data(
     )
 
 
+def _toy_outlier_data() -> input_data:
+    labels = ["y1", "y2", "y3", "y4"]
+    return input_data(
+        name="toy4_outlier",
+        n_meas=4,
+        n_syst=1,
+        labels=labels,
+        measurements=dict(zip(labels, [16.0, 10.5, 9.5, 9.0])),
+        V_stat=np.eye(4),
+        syst={"sys1": np.ones(4)},
+        corr={"sys1": np.eye(4)},
+        eoe_type={"sys1": "independent"},
+        uncertain_systematics={"sys1": np.full(4, 0.5)},
+    )
+
+
 def test_blue_limit_matches_analytic_result() -> None:
     combination = GVMCombination(_blue_data())
     fit = combination.fit()
@@ -109,8 +122,7 @@ def test_tiny_error_on_error_recovers_blue_limit() -> None:
 
 
 def test_toy_outlier_regression() -> None:
-    path = ROOT / "runs" / "toy_4meas" / "toy4.yaml"
-    combination = GVMCombination(build_input_data(str(path)))
+    combination = GVMCombination(_toy_outlier_data())
     fit = combination.fit()
     low, high, half_width = combination.confidence_interval()
 

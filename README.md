@@ -84,14 +84,20 @@ model's information matrices; no user action is required.
 
 ## Installation
 
-Install the package in editable (development) mode:
+Python 3.11 or newer is required. Install the released package with:
 
 ```bash
-pip install -e .
+python -m pip install gvm-combinations
 ```
 
-Python 3.11 or newer is required. This installs the `gvm_combinations` package
-and all its dependencies (`numpy`, `PyYAML`, `iminuit`, `scipy`, `matplotlib`).
+To work from the repository, install it in editable mode:
+
+```bash
+python -m pip install -e .
+```
+
+This installs the `gvm_combinations` package and its dependencies: NumPy,
+PyYAML, iminuit, SciPy and Matplotlib.
 
 ## Testing
 
@@ -239,6 +245,7 @@ through the theory, the API, and the interpretation of the outputs.
 GVM-Combinations/
 ├── .github/workflows/ci.yml   # Tests and type checking
 ├── pyproject.toml              # Package metadata & dependencies
+├── PYPI_README.md              # PyPI package description
 ├── src/gvm_combinations/       # The statistical engine
 │   ├── __init__.py
 │   ├── combination.py          # GVMCombination class
