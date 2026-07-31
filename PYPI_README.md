@@ -39,12 +39,12 @@ systematic uncertainty model.
 
 ## Documentation and examples
 
-The [GitHub repository](https://github.com/EnzoCanonero/GVM-Combinations)
+The [GitHub repository](https://github.com/EnzoCanonero/gvm-combinations)
 contains the full mathematical overview, configuration reference, example
 runs and tutorials:
 
-- [Toy GVM tutorial](https://github.com/EnzoCanonero/GVM-Combinations/blob/main/notebooks/toy/toy_tutorial.ipynb)
-- [Top-mass combination tutorial](https://github.com/EnzoCanonero/GVM-Combinations/blob/main/notebooks/top-mass/top_mass_combination.ipynb)
+- [Toy GVM tutorial](https://github.com/EnzoCanonero/gvm-combinations/blob/main/notebooks/toy/toy_tutorial.ipynb)
+- [Top-mass combination tutorial](https://github.com/EnzoCanonero/gvm-combinations/blob/main/notebooks/top-mass/top_mass_combination.ipynb)
 
 Methodological details are available in
 [arXiv:2407.05322](https://arxiv.org/abs/2407.05322).
@@ -52,9 +52,9 @@ Methodological details are available in
 ## Citation
 
 Citation metadata are provided in
-[`CITATION.cff`](https://github.com/EnzoCanonero/GVM-Combinations/blob/main/CITATION.cff).
+[`CITATION.cff`](https://github.com/EnzoCanonero/gvm-combinations/blob/main/CITATION.cff).
 
 ## License
 
 GVM Combinations is distributed under the
-[MIT License](https://github.com/EnzoCanonero/GVM-Combinations/blob/main/LICENSE).
+[MIT License](https://github.com/EnzoCanonero/gvm-combinations/blob/main/LICENSE).

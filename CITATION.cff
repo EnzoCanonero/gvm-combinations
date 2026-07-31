@@ -5,4 +5,4 @@ type: software
 authors:
   - family-names: "Canonero"
     given-names: "Enzo"
-repository-code: "https://github.com/EnzoCanonero/GVM-Combinations"
+repository-code: "https://github.com/EnzoCanonero/gvm-combinations"

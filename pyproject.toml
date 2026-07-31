@@ -27,8 +27,8 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/EnzoCanonero/GVM-Combinations"
-Issues = "https://github.com/EnzoCanonero/GVM-Combinations/issues"
+Repository = "https://github.com/EnzoCanonero/gvm-combinations"
+Issues = "https://github.com/EnzoCanonero/gvm-combinations/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

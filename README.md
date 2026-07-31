@@ -242,7 +242,7 @@ through the theory, the API, and the interpretation of the outputs.
 ## Repository layout
 
 ```
-GVM-Combinations/
+gvm-combinations/
 ├── .github/workflows/ci.yml   # Tests and type checking
 ├── pyproject.toml              # Package metadata & dependencies
 ├── PYPI_README.md              # PyPI package description
