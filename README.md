@@ -1,9 +1,28 @@
 # GVM Combination Toolkit
 
+A Python toolkit for combining correlated measurements with errors-on-errors.
+
 This repository provides a simple implementation of the Gamma Variance Model (GVM) for
 combining correlated measurements. The `GVMCombination` class constructs the likelihood,
 performs the minimisation with *Minuit*, and computes confidence intervals using an
 analytic Bartlett correction.
+
+## Contents
+
+- [Statistical overview](#statistical-overview)
+- [Bartlett correction](#bartlett-correction)
+- [Installation](#installation)
+- [Testing](#testing)
+- [Quick start](#quick-start)
+- [Configuration file](#configuration-file)
+- [Runs](#runs)
+- [Tutorials](#tutorials)
+- [Repository layout](#repository-layout)
+- [Companion paper](#companion-paper)
+- [Citation](#citation)
+- [License](#license)
+
+## Statistical overview
 
 The likelihood is defined as
 
@@ -47,7 +66,7 @@ nuisance parameters are profiled out, as in a BLUE-like combination.
 
 Further details can be found in [arXiv:2407.05322](https://arxiv.org/abs/2407.05322).
 
-## Bartlett Correction
+## Bartlett correction
 
 Profile likelihood ratios and goodness‑of‑fit (GOF) statistics can deviate from
 their asymptotic chi‑square behaviour when error‑on‑error terms are present.
@@ -63,7 +82,7 @@ applies Bartlett correction factors computed analytically within the model.
 The correction factors are computed automatically from the fitted point and the
 model's information matrices; no user action is required.
 
-## Setup
+## Installation
 
 Install the package in editable (development) mode:
 
@@ -74,14 +93,18 @@ pip install -e .
 This installs the `gvm` package and all its dependencies (`numpy`, `PyYAML`,
 `iminuit`, `scipy`, `matplotlib`).
 
-For development, install the optional type-checking dependencies and run mypy:
+## Testing
+
+For development, install the optional test and type-checking dependencies:
 
 ```bash
 pip install -e ".[dev]"
+python -m pytest
 python -m mypy
+python -m ruff check src/gvm scripts tests
 ```
 
-## Quick Start
+## Quick start
 
 ```python
 import matplotlib.pyplot as plt
@@ -101,7 +124,7 @@ plot_combination_summary(ax, data, fit.mu, (lo_68, hi_68), (lo_95, hi_95))
 fig.tight_layout()
 ```
 
-## Configuration File
+## Configuration file
 
 The combination is driven by a YAML configuration file with three main
 sections:
@@ -210,10 +233,11 @@ through the theory, the API, and the interpretation of the outputs.
 - [Top-mass combination tutorial](notebooks/top-mass/top_mass_combination.ipynb) —
   Application to the combination from [arXiv:2407.05322](https://arxiv.org/abs/2407.05322).
 
-## Project Structure
+## Repository layout
 
 ```
 GVM-Combinations/
+├── .github/workflows/ci.yml   # Tests and type checking
 ├── pyproject.toml              # Package metadata & dependencies
 ├── setup.py                    # Fallback for older pip versions
 ├── src/gvm/                    # The statistical engine
@@ -227,6 +251,8 @@ GVM-Combinations/
 ├── scripts/
 │   ├── run_combination.py      # Generic fit script
 │   └── scan_error_on_error.py  # Generic lambda scan script
+├── tests/
+│   └── test_mathematics.py     # Mathematical stability tests
 ├── runs/
 │   ├── toy_2meas/              # 2-measurement example (incompatible, correlated)
 │   │   ├── toy2.yaml           # Run configuration
@@ -245,3 +271,17 @@ GVM-Combinations/
     └── top-mass/               # Top-mass combination tutorial
         └── top_mass_combination.ipynb
 ```
+
+## Companion paper
+
+Further methodological details and the top-mass application are available in
+[arXiv:2407.05322](https://arxiv.org/abs/2407.05322).
+
+## Citation
+
+If you use GVM Combinations, please cite the software using the metadata in
+[`CITATION.cff`](CITATION.cff) and cite the accompanying paper.
+
+## License
+
+GVM Combinations is distributed under the [MIT License](LICENSE).
