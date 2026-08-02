@@ -13,7 +13,7 @@ from scipy.stats import norm
 from .config import (
     ErrorOnError,
     ErrorOnErrorType,
-    input_data as InputData,
+    InputData,
     validate_input_data,
 )
 from .fit_results import FitResult

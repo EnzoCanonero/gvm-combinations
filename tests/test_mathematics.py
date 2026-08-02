@@ -4,11 +4,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy.stats import norm
 
-from gvm_combinations import GVMCombination, input_data
+from gvm_combinations import GVMCombination, InputData
 
 
-def _blue_data() -> input_data:
-    return input_data(
+def _blue_data() -> InputData:
+    return InputData(
         name="blue",
         n_meas=2,
         n_syst=0,
@@ -25,13 +25,13 @@ def _blue_data() -> input_data:
 def _blue_with_systematic(
     epsilon: Optional[float],
     eoe_type: Literal["dependent", "independent"] = "independent",
-) -> input_data:
+) -> InputData:
     uncertain: dict[str, Union[float, np.ndarray]] = {}
     if epsilon is not None:
         uncertain = {
             "scale": epsilon if eoe_type == "dependent" else np.full(2, epsilon)
         }
-    return input_data(
+    return InputData(
         name="blue_with_systematic",
         n_meas=2,
         n_syst=1,
@@ -48,7 +48,7 @@ def _blue_with_systematic(
 def _structured_data(
     offset: float = 0.0,
     order: Optional[np.ndarray] = None,
-) -> input_data:
+) -> InputData:
     labels = np.array(["y1", "y2", "y3", "y4"])
     values = np.array([16.0, 10.5, 9.5, 9.0]) + offset
     stat = np.array([1.0, 0.8, 1.2, 0.9])
@@ -61,7 +61,7 @@ def _structured_data(
         shifts = shifts[order]
         epsilon = epsilon[order]
     label_list = labels.tolist()
-    return input_data(
+    return InputData(
         name="structured",
         n_meas=4,
         n_syst=1,
@@ -75,9 +75,9 @@ def _structured_data(
     )
 
 
-def _toy_outlier_data() -> input_data:
+def _toy_outlier_data() -> InputData:
     labels = ["y1", "y2", "y3", "y4"]
-    return input_data(
+    return InputData(
         name="toy4_outlier",
         n_meas=4,
         n_syst=1,

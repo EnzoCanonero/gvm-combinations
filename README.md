@@ -248,6 +248,7 @@ gvm-combinations/
 ├── PYPI_README.md              # PyPI package description
 ├── src/gvm_combinations/       # The statistical engine
 │   ├── __init__.py
+│   ├── py.typed                # Type information marker
 │   ├── combination.py          # GVMCombination class
 │   ├── config.py               # YAML parsing & validation
 │   ├── likelihood.py           # Log-likelihood construction

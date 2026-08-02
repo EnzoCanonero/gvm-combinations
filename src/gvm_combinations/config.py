@@ -15,7 +15,7 @@ ErrorOnErrorType = Literal['dependent', 'independent']
 
 
 @dataclass
-class input_data:
+class InputData:
     """Input data for a measurement combination."""
 
     name: str
@@ -37,7 +37,7 @@ def _resolve_path(value: str, base_dir: Path) -> Path:
     return (base_dir / path).resolve()
 
 
-def build_input_data(path: str) -> input_data:
+def build_input_data(path: str) -> InputData:
     """Build combination input data from a YAML file."""
     config_path = Path(path).expanduser().resolve()
     with config_path.open('r') as f:
@@ -157,7 +157,7 @@ def build_input_data(path: str) -> input_data:
             if epsf != 0.0:
                 uncertain_systematics[sname] = epsf
 
-    return input_data(
+    return InputData(
         name=name,
         n_meas=n_meas,
         n_syst=n_syst,
@@ -171,36 +171,36 @@ def build_input_data(path: str) -> input_data:
     )
 
 
-def validate_input_data(input_data: input_data) -> None:
+def validate_input_data(data: InputData) -> None:
     """Validate the consistency of parsed input data."""
-    meas_names = list(input_data.measurements)
-    if len(meas_names) != input_data.n_meas:
-        raise ValueError(f'Expected {input_data.n_meas} measurements, got {len(meas_names)}')
+    meas_names = list(data.measurements)
+    if len(meas_names) != data.n_meas:
+        raise ValueError(f'Expected {data.n_meas} measurements, got {len(meas_names)}')
 
-    if len(input_data.syst) != input_data.n_syst:
-        raise ValueError(f'Expected {input_data.n_syst} systematics, got {len(input_data.syst)}')
+    if len(data.syst) != data.n_syst:
+        raise ValueError(f'Expected {data.n_syst} systematics, got {len(data.syst)}')
 
-    if input_data.V_stat.shape != (input_data.n_meas, input_data.n_meas):
-        raise ValueError(f'Stat covariance must be {input_data.n_meas}x{input_data.n_meas}')
+    if data.V_stat.shape != (data.n_meas, data.n_meas):
+        raise ValueError(f'Stat covariance must be {data.n_meas}x{data.n_meas}')
         
-    diff = np.argwhere(~np.isclose(input_data.V_stat, input_data.V_stat.T, rtol=1e-7, atol=1e-8))
+    diff = np.argwhere(~np.isclose(data.V_stat, data.V_stat.T, rtol=1e-7, atol=1e-8))
     for i, j in diff:
         if i < j:
             warnings.warn(
                 f'Stat covariance asymmetric for measurements '
                 f'{meas_names[i]} and {meas_names[j]}: '
-                f'{input_data.V_stat[i, j]} vs {input_data.V_stat[j, i]}')
+                f'{data.V_stat[i, j]} vs {data.V_stat[j, i]}')
     
-    for name, arr in input_data.syst.items():
-        if arr.shape[0] != input_data.n_meas:
-            raise ValueError(f'Systematic {name} must have {input_data.n_meas} values')
+    for name, arr in data.syst.items():
+        if arr.shape[0] != data.n_meas:
+            raise ValueError(f'Systematic {name} must have {data.n_meas} values')
 
-    if len(input_data.corr) != input_data.n_syst:
-        raise ValueError(f'Expected {input_data.n_syst} correlation matrices, got {len(input_data.corr)}')
+    if len(data.corr) != data.n_syst:
+        raise ValueError(f'Expected {data.n_syst} correlation matrices, got {len(data.corr)}')
 
-    for name, mat in input_data.corr.items():
-        if mat.shape != (input_data.n_meas, input_data.n_meas):
-            raise ValueError(f'Correlation matrix {name} must be {input_data.n_meas}x{input_data.n_meas}')
+    for name, mat in data.corr.items():
+        if mat.shape != (data.n_meas, data.n_meas):
+            raise ValueError(f'Correlation matrix {name} must be {data.n_meas}x{data.n_meas}')
         diff = np.argwhere(~np.isclose(mat, mat.T, rtol=1e-7, atol=1e-8))
         for i, j in diff:
             if i < j:
@@ -209,17 +209,17 @@ def validate_input_data(input_data: input_data) -> None:
                     f'{meas_names[i]} and {meas_names[j]}: '
                     f'{mat[i, j]} vs {mat[j, i]}')
         # Independent error-on-error terms require a diagonal correlation matrix.
-        if input_data.eoe_type.get(name, 'dependent') == 'independent':
-            if not np.allclose(mat, np.eye(input_data.n_meas)):
+        if data.eoe_type.get(name, 'dependent') == 'independent':
+            if not np.allclose(mat, np.eye(data.n_meas)):
                 raise ValueError(
                     f'Systematic {name} has independent error-on-error but correlation is not diagonal')
 
     # Dependent systematics use a single epsilon.
-    for name, typ in input_data.eoe_type.items():
+    for name, typ in data.eoe_type.items():
         if typ != 'dependent':
             continue
-        if name in input_data.uncertain_systematics:
-            eps_val = input_data.uncertain_systematics[name]
+        if name in data.uncertain_systematics:
+            eps_val = data.uncertain_systematics[name]
             if isinstance(eps_val, (list, tuple, np.ndarray)):
                 raise ValueError(
                     f"Systematic {name} has dependent error-on-error but epsilon is not a single number")
@@ -228,33 +228,33 @@ def validate_input_data(input_data: input_data) -> None:
             except Exception:
                 epsf = None
             if epsf is not None and epsf == 0.0:
-                input_data.uncertain_systematics.pop(name, None)
+                data.uncertain_systematics.pop(name, None)
                 warnings.warn(
                     f"Systematic '{name}' has epsilon 0.0; removing from uncertain_systematics.")
 
     # Independent systematics use one epsilon per active shift.
-    for name, typ in input_data.eoe_type.items():
+    for name, typ in data.eoe_type.items():
         if typ != 'independent':
             continue
-        if name not in input_data.uncertain_systematics:
+        if name not in data.uncertain_systematics:
             continue
-        expected = np.count_nonzero(input_data.syst[name])
-        val = input_data.uncertain_systematics[name]
+        expected = np.count_nonzero(data.syst[name])
+        val = data.uncertain_systematics[name]
         if not isinstance(val, (list, tuple, np.ndarray)):
-            input_data.uncertain_systematics[name] = np.repeat(float(val), expected)
-        eps_raw = input_data.uncertain_systematics[name]
+            data.uncertain_systematics[name] = np.repeat(float(val), expected)
+        eps_raw = data.uncertain_systematics[name]
         eps = np.asarray(eps_raw, dtype=float)
         if eps.shape[0] != expected:
-            if eps.shape[0] == input_data.n_meas:
-                mask = input_data.syst[name] != 0.0
+            if eps.shape[0] == data.n_meas:
+                mask = data.syst[name] != 0.0
                 eps = eps[mask]
-                input_data.uncertain_systematics[name] = eps
+                data.uncertain_systematics[name] = eps
                 warnings.warn(
                     f"Systematic '{name}' epsilon vector included zero-shift entries; dropping them to match active components.")
             else:
                 raise ValueError(
-                    f"Systematic {name} has independent error-on-error but epsilon has {eps.shape[0]} values (expected {expected} or {input_data.n_meas})")
+                    f"Systematic {name} has independent error-on-error but epsilon has {eps.shape[0]} values (expected {expected} or {data.n_meas})")
         if expected == 0 or (eps.size == expected and not np.any(eps != 0.0)):
-            input_data.uncertain_systematics.pop(name, None)
+            data.uncertain_systematics.pop(name, None)
             warnings.warn(
                 f"Systematic '{name}' has all-zero epsilons; removing from uncertain_systematics.")

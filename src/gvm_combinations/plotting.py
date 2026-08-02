@@ -7,7 +7,7 @@ from typing import Optional
 import numpy as np
 from matplotlib.axes import Axes
 
-from .config import input_data as InputData
+from .config import InputData
 
 
 def plot_combination_summary(
