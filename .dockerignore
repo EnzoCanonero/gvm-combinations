@@ -1,0 +1,9 @@
+**
+
+!Dockerfile
+!.dockerignore
+!pyproject.toml
+!PYPI_README.md
+!LICENSE
+!src/
+!src/**

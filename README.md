@@ -102,6 +102,18 @@ python -m pip install -e .
 This installs the `gvm_combinations` package and its dependencies: NumPy,
 PyYAML, iminuit, SciPy and Matplotlib.
 
+### Docker
+
+Build the minimal library image from the repository root:
+
+```bash
+docker build -t gvm-combinations:local .
+docker run --rm -it gvm-combinations:local
+```
+
+The image contains the installed Python package and its runtime dependencies;
+scripts, run configurations, notebooks and development tools are not included.
+
 ## Testing
 
 For development, install the optional test and type-checking dependencies:
@@ -247,6 +259,7 @@ through the theory, the API, and the interpretation of the outputs.
 ```
 gvm-combinations/
 ├── .github/workflows/ci.yml   # Tests and type checking
+├── Dockerfile                  # Minimal package image
 ├── pyproject.toml              # Package metadata & dependencies
 ├── PYPI_README.md              # PyPI package description
 ├── src/gvm_combinations/       # The statistical engine
