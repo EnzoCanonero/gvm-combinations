@@ -1,5 +1,8 @@
 # GVM Combination Toolkit
 
+[![Tests](https://github.com/EnzoCanonero/gvm-combinations/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/EnzoCanonero/gvm-combinations/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/gvm-combinations?cacheSeconds=300)](https://pypi.org/project/gvm-combinations/)
+
 A Python toolkit for combining correlated measurements with errors-on-errors.
 
 This repository provides a simple implementation of the Gamma Variance Model (GVM) for
