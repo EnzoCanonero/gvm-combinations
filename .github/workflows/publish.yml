@@ -1,0 +1,30 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gvm-combinations
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - run: python -m pip install dist/*.whl
+      - run: >-
+          cd /tmp &&
+          python -c "from importlib.metadata import version;
+          import gvm_combinations;
+          assert gvm_combinations.__version__ == version('gvm-combinations')"
+      - uses: pypa/gh-action-pypi-publish@release/v1
